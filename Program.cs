@@ -100,3 +100,54 @@ foreach (var order in allOrders)
 }
 
 Console.WriteLine($"Общая выручка: {totalRevenue} ₽");
+
+Console.WriteLine("=== Шаг 5 ===");
+
+var customer = db.Customers.First(c => c.Name == "Иван Петров");   // найти
+customer.Phone = "+7 900 999-00-00";                                  // изменить
+db.SaveChanges();   // EF сам видит, что изменилось, и отправляет UPDATE
+
+var allProducts = db.Products.ToList();
+foreach (var product in allProducts)
+{
+    product.Price = product.Price * 1.1m;
+}
+
+var specificProduct = db.Products.First(p => p.Name == "Каминные");
+specificProduct.Stock = 0;
+
+db.SaveChanges();
+
+Console.WriteLine("=== Шаг 5. Усложнение ===");
+
+void PlaceOrder(Customer customer, Product product, int quantity)
+{
+    var dbProduct = db.Products.First(p => p.Id == product.Id);
+
+    if (dbProduct.Stock < quantity)
+    {
+        Console.WriteLine($"Недостаточно на складе (запрошено {quantity}, есть {dbProduct.Stock})");
+        return;
+    }
+
+    var newOrder = new Order
+    {
+        Customer = customer,
+        Product = dbProduct,
+        Quantity = quantity,
+        OrderDate = DateTime.UtcNow
+    };
+    db.Orders.Add(newOrder);
+
+    dbProduct.Stock -= quantity;
+
+// Сохраняем одним SaveChanges, потому что это единая операция. 
+// EF Core обернёт оба действия в транзакцию: либо сохранится и заказ, 
+// и остаток, либо ничего (защита от сбоев)
+    db.SaveChanges();
+    Console.WriteLine("Заказ успешно оформлен!");
+}
+
+PlaceOrder(ivan, hos, 5);
+
+PlaceOrder(olga, pod, 100);
