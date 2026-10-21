@@ -52,3 +52,51 @@ db.SaveChanges();
 // DateTime.Now берет время с компьютера (местное время),
 // а DateTime.UtcNow - это всемирное координированное время (UTC).
 // База данных PostgreSQL требует время именно в UTC, поэтому мы используем UtcNow
+
+Console.WriteLine("=== Шаг 4 ===");
+
+var omsk = db.Customers
+    .Where(c => c.City == "Омск")   // только из Омска
+    .OrderBy(c => c.Name)            // по алфавиту
+    .ToList();                       // здесь запрос уходит в базу
+
+foreach (var c in omsk)
+    Console.WriteLine($"{c.Name}, {c.Phone}");
+
+var cheapProducts = db.Products
+    .Where(p => p.Price < 100m)
+    .OrderBy(p => p.Price)
+    .ToList();
+
+foreach (var p in cheapProducts)
+    Console.WriteLine($"{p.Name} — {p.Price} ₽");
+
+int inStockCount = db.Products.Count(p => p.Stock > 0);
+Console.WriteLine($"Видов спичек в наличии: {inStockCount}");
+
+var top3Expensive = db.Products
+    .OrderByDescending(p => p.Price)
+    .Take(3)
+    .ToList();
+
+foreach (var p in top3Expensive)
+    Console.WriteLine($"{p.Name} — {p.Price} ₽");
+
+Console.WriteLine("=== Шаг 4. Усложнение ===");
+
+var allOrders = db.Orders
+    .Include(o => o.Customer)
+    .Include(o => o.Product)
+    .ToList();
+
+decimal totalRevenue = 0m;
+
+foreach (var order in allOrders)
+{
+    decimal orderSum = order.Product.Price * order.Quantity;
+    totalRevenue += orderSum;
+
+    Console.WriteLine($"{order.Customer.Name} — {order.Product.Name} — {order.Quantity} шт. — {orderSum} ₽");
+}
+
+Console.WriteLine($"Общая выручка: {totalRevenue} ₽");
