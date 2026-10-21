@@ -151,3 +151,28 @@ void PlaceOrder(Customer customer, Product product, int quantity)
 PlaceOrder(ivan, hos, 5);
 
 PlaceOrder(olga, pod, 100);
+
+Console.WriteLine("=== Шаг 6 ===");
+
+var leaving = db.Customers.First(c => c.Name == "Ольга Смирнова");   // найти
+db.Customers.Remove(leaving);                                         // пометить на удаление
+db.SaveChanges();                                                     // отправить DELETE
+
+var outOfStock = db.Products.Where(p => p.Stock == 0).ToList();
+db.Products.RemoveRange(outOfStock);
+db.SaveChanges();
+
+int productsLeft = db.Products.Count();
+Console.WriteLine($"Товаров осталось после удаления: {productsLeft}");
+
+Console.WriteLine("=== Шаг 6. Усложнение ===");
+
+var customerWithOrders = db.Customers.First(c => c.Name == "Дмитрий Соколов");
+db.Customers.Remove(customerWithOrders);
+db.SaveChanges();
+// Его заказы тоже удалились из базы.
+// Произошло это потому, что при создании таблиц EF Core автоматически поставил правило ON DELETE CASCADE.
+// То есть база данных сама понимает: если удаляют покупателя, надо удалить и все его заказы, чтобы не осталось "висячих" записей.
+// Для магазина это плохо, потому что мы теряем историю покупок и выручку.
+// Если покупатель просто захотел удалить аккаунт, мы не должны терять данные о том, что он у нас покупал.
+// Правильнее было бы не удалять его из базы, а просто поставить ему какой-то флаг (например, "удален") или запретить удаление, если у него есть заказы
