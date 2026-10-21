@@ -6,6 +6,7 @@ public class ShopContext : DbContext
 {
     public DbSet<Customer> Customers { get; set; }   // таблица Customers
     public DbSet<Product> Products { get; set; }    // таблица Products
+    public DbSet<Order> Orders { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
